@@ -127,7 +127,7 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="post:\usersfile:multipart\form-data:test-florence-proc-config">
+    <flow name="post:\usersFile:multipart\form-data:test-florence-proc-config">
         <ee:transform doc:name="Transform Message" doc:id="51b6a530-176b-4226-8339-2b634f90744d">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -164,9 +164,6 @@ output application/json
 "Inserimento effettuato con successo"]]></ee:set-payload>
             </ee:message>
         </ee:transform>
-        <logger level="INFO" message="post:\user:multipart\form-data:test-florence-proc-config" />
-    </flow>
-    <flow name="post:\user:multipart\form-data:test-florence-proc-config">
         <logger level="INFO" message="post:\user:multipart\form-data:test-florence-proc-config" />
     </flow>
 </mule>
