@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
     <http:listener-config name="test-florence-proc-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8081" />
+        <http:listener-connection host="0.0.0.0" port="8082" />
     </http:listener-config>
     <apikit:config name="test-florence-proc-config" api="test-florence-proc.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="0dbd82ea-42a6-46d4-8413-1473c8969ae5" basePath="/api/">
+        <http:request-connection host="${sys.host}" port="${sys.port}" />
+    </http:request-config>
+    <configuration-properties doc:name="Configuration properties" doc:id="dc2e7d4a-ccab-4ab1-9584-fca6b531af0b" file="proc-${env}.yaml" />
     <flow name="test-florence-proc-main">
         <http:listener config-ref="test-florence-proc-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
@@ -124,6 +128,45 @@ output application/json
         </error-handler>
     </flow>
     <flow name="post:\usersfile:multipart\form-data:test-florence-proc-config">
+        <ee:transform doc:name="Transform Message" doc:id="51b6a530-176b-4226-8339-2b634f90744d">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <foreach doc:name="For Each" doc:id="eae1e09e-52f1-4b45-af0f-137132c61524" collection="payload[0][0][1]">
+            <ee:transform doc:name="Transform Message" doc:id="c071174f-0de7-4d43-969c-a0217fb421dd">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+
+var userCsv = (payload pluck $) joinBy ","
+var userCsvSplitted = userCsv splitBy(";")
+---
+{
+	name: userCsvSplitted[0],
+	surname: userCsvSplitted[1],
+	email: userCsvSplitted[2],
+	address: userCsvSplitted[3]
+}]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+            <logger level="INFO" doc:name="Logger" doc:id="0919469e-4d92-4e10-a15b-0b2963875b15" message="#[payload]" />
+            <http:request method="POST" doc:name="Request" doc:id="6f58f172-c51f-4eff-a16d-a35e3cc13af2" config-ref="HTTP_Request_configuration" path="user" />
+        </foreach>
+        <ee:transform doc:name="Transform Message" doc:id="730feb16-8310-4ce8-9151-2f6428dec25e">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+"Inserimento effettuato con successo"]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <logger level="INFO" message="post:\user:multipart\form-data:test-florence-proc-config" />
+    </flow>
+    <flow name="post:\user:multipart\form-data:test-florence-proc-config">
         <logger level="INFO" message="post:\user:multipart\form-data:test-florence-proc-config" />
     </flow>
 </mule>
