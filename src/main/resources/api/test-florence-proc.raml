@@ -1,0 +1,20 @@
+#%RAML 1.0
+title: test-florence-proc
+
+uses:
+  lib-types: exchange_modules/05358790-cc39-478b-b115-a673f6d504d0/test-florence-lib/1.0.3/test-florence-lib.raml
+
+/user:
+  post:
+    body:
+      multipart/form-data:
+        properties:
+          fileName:
+            description: fileName has the actual file name.
+            type: string
+            required: true
+          fileContent:
+            description: fileContent has the actual payload.
+            type: file
+            fileTypes: ['application/octet-stream','file/csv']
+            required: true
