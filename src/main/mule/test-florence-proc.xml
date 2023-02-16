@@ -133,26 +133,23 @@ output application/json
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/java
 ---
-payload]]></ee:set-payload>
+read(payload.parts.fileContent.content.^raw, "application/csv", { separator: ";" })]]></ee:set-payload>
             </ee:message>
         </ee:transform>
-        <foreach doc:name="For Each" doc:id="eae1e09e-52f1-4b45-af0f-137132c61524" collection="payload[0][0][1]">
-            <ee:transform doc:name="Transform Message" doc:id="c071174f-0de7-4d43-969c-a0217fb421dd">
-                <ee:message>
-                    <ee:set-payload><![CDATA[%dw 2.0
+		<ee:transform doc:name="Transform Message" doc:id="2d6d2d6d-38fe-4200-98bc-c6213778984e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
-
-var userCsv = (payload pluck $) joinBy ","
-var userCsvSplitted = userCsv splitBy(";")
 ---
-{
-	name: userCsvSplitted[0],
-	surname: userCsvSplitted[1],
-	email: userCsvSplitted[2],
-	address: userCsvSplitted[3]
+payload map (record) -> {
+	name: record.nome,
+	surname: record.cognome,
+	email: record.mail,
+	address: record.indirizzo
 }]]></ee:set-payload>
-                </ee:message>
-            </ee:transform>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="eae1e09e-52f1-4b45-af0f-137132c61524" collection="payload">
             <logger level="INFO" doc:name="Logger" doc:id="0919469e-4d92-4e10-a15b-0b2963875b15" message="#[payload]" />
             <http:request method="POST" doc:name="Request" doc:id="6f58f172-c51f-4eff-a16d-a35e3cc13af2" config-ref="HTTP_Request_configuration" path="user" />
         </foreach>
@@ -166,4 +163,43 @@ output application/json
         </ee:transform>
         <logger level="INFO" message="post:\user:multipart\form-data:test-florence-proc-config" />
     </flow>
+	<flow name="oldCsvExtraction" doc:id="6820bdd4-7c08-4b57-a0f2-dbf24660f5e0" >
+		<ee:transform doc:name="Transform Message" doc:id="8ed1b42d-817e-4a2a-8392-bb9892140e98" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="073e674d-21db-4f29-a7a2-bd0a04e2af0e" collection="payload[0][0][1]" >
+			<ee:transform doc:name="Transform Message" doc:id="97e3a818-15c3-454a-abd7-908a2e9318ea" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var userCsv = (payload pluck $) joinBy ","
+var userCsvSplitted = userCsv splitBy(";")
+---
+{
+	name: userCsvSplitted[0],
+	surname: userCsvSplitted[1],
+	email: userCsvSplitted[2],
+	address: userCsvSplitted[3]
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="09c09535-4c8c-4f43-b956-ef249b5105d9" message="#[payload]" />
+			<http:request method="POST" doc:name="Request" doc:id="779f04ca-20b6-40f2-a8df-2f460eea83a1" config-ref="HTTP_Request_configuration" path="user" />
+		</foreach>
+		<ee:transform doc:name="Transform Message1" doc:id="8e86e95c-c61d-49b5-8823-c471879da05a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"Inserimento effettuato con successo"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="2f16e321-74cf-44a6-80cf-fb1af255cde7" message="post:\user:multipart\form-data:test-florence-proc-config" />
+	</flow>
 </mule>
